@@ -11,14 +11,28 @@ Input
         "production" run, this should be a shared directory.
  */
 
-%Let project_dir = C:/users/&UserID./documents/github/SAS-code;
-%Let output_dir = C:/users/&UserID./desktop/trial-output;
+ /* Have SAS abort if any error occurs */
+Options errabend;
+
+%Let project_dir = C:/users/&SysUserID./documents/github/SAS-code;
+%Let output_dir = C:/users/&SysUserID./desktop/trial-output;
 
 Libname DHI "&output_dir.";
 
-%Include "&project_dir./functions/create_function_dataset.sas";
+%Include "&project_dir./sas/functions/create_function_dataset.sas";
+
+DATA _NULL_;
+    If _syserr_ then abort;
+Run;
 
 PROC DATASETS library = Work nodetails nolist;
+    Modify Functions (
+        alter = DHI
+        write = DHI
+        label =
+'Compiled routines for handling arrays, dates, and other utility uses. Write and
+alter passwords are both "DHI"'
+    );
     Copy outlib = DHI;
         Select Functions / memtype = data;
 Run;
