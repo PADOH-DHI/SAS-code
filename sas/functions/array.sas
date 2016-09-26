@@ -16,9 +16,12 @@ Additonal notes
  ----------------------------------------------------------------*/
 
 /* Calls a function with two arguments and stores the result */
-%MACRO call_binary_function;
-    /* Remove any punctuation, like quotes, or spaces from the function name */
+%MACRO call_binary_function; 
+    /* Remove any punctuation or spaces from the function name */
     %Let function_ = %sysfunc(compress(&function., , PS));
+    /* Remove quotation marks around character value arguments */
+    %Let a = %sysfunc(dequote(&a.));
+    %Let b = %sysfunc(dequote(&b.));
     %Let result = %sysfunc(&function_.(&&a., &&b.));
 %Mend call_binary_function;
 
