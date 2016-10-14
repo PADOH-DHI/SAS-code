@@ -26,14 +26,6 @@ Additonal notes
 %Mend call_binary_function;
 
 
- /* Calls a function with one argument and stores the result */
-%MACRO call_unary_function;
-    /* Remove any punctuation, like quotes, or spaces from the function name */
-    %Let function_ = %sysfunc(compress(&function., , PS));
-    %Let result = %sysfunc(&function_.(&&a., &&b.));
-%Mend call_unary_function;
-
-
 PROC FCMP outlib = Work.Functions.Utility;
     /*------------------------------------------------------------------------
     Check if all numeric values in an array are equal.
