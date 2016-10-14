@@ -13,3 +13,6 @@ publicly released (passwords, server paths, etc.) should be set here.
 
  /* Directory to store the output data sets. Do not quote. */
 %Let output_dir = C:/users/&SysUserID./desktop/trial-output;
+
+ /* Password for ALTER and WRITE protections on output data sets */
+%Let data_password = DHI;

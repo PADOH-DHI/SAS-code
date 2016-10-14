@@ -2,3 +2,4 @@ config.sas
 *.bak
 *.egp
 *.html
+*.log

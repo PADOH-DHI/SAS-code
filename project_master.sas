@@ -50,7 +50,9 @@ DATA _NULL_;
         If not fileexist(subdir) then
             rc_dir = dcreate(subdir, "&output_dir.");
         lib = substr(subdir, 1, 8);
-        rc_lib = libname(lib, subdir);
+        libpath = cats("&output_dir./", subdir);
+        Put "Library " subdir +(-1) ": " libpath;
+        rc_lib = libname(lib, libpath);
     End;
 Run;
 
@@ -64,10 +66,11 @@ Libname Macros "Macros";
 */
 
 
-
  /*----------------------------------------------------------------------------
     Create the project products in the WORK library
  ----------------------------------------------------------------------------*/
+Run;
+
 %Include "sas/functions/create_function_dataset.sas";
 
 
@@ -76,33 +79,38 @@ Libname Macros "Macros";
  ----------------------------------------------------------------------------*/
 PROC DATASETS library = Work nodetails nolist;
     Modify Functions (
-        alter = DHI
-        write = DHI
+        alter = &data_password.
+        write = &data_password.
         label =
-'Compiled routines for handling arrays, dates, and other utility uses. Write and
-alter passwords are both "DHI"'
+"Compiled routines for handling arrays, dates, and other utility uses. Write and
+alter passwords are both '&data_password.'"
     );
     Copy outlib = Function;
-        Select Functions / memtype = data;
 Run;
+
 
  /*----------------------------------------------------------------------------
     Copy documentation to the output directory
  ----------------------------------------------------------------------------*/
-DATA _NULL_;
-    Length
-        document_text $ 5000;
-    Input document_text;
+ /*
+SAS server might not allow system commands for copying files.
+Argument "outfile" is the file path and name for the copy. It's relative to
+output_dir. If either "infile" or "outfile" have spaces, wrap it in quotes.
+ */
+%MACRO copy_file(infile, outfile);
+    %Let infile = %sysfunc(dequote(&infile.));
+    %Let outfile = %sysfunc(dequote(&outfile.));
+    DATA _NULL_;
+        Infile "&infile." truncover;
+        File "&output_dir./&outfile.";
+        Input;
+        Put _infile_;
+    Run;
+%Mend copy_file;
 
-    Infile 'README.md' end = last_line stopover;
-    File "&output_dir./README.md";
-    Do while (not _last_line);
-        Put document_text;
-    End;
-
-    Infile 'sas/functions/README.md' end = last_line stopover;
-    File "&output_dir./functions/README.md";
-    Do while (not last_line);
-        Put document_text;
-    End;
-Run;
+%copy_file(README.md, README.md);
+%copy_file(sas/functions/README.md, Functions/README.md);
+%copy_file(sas/macros/add_unpathed_members.sas,
+           Macros/add_unpathed_members.sas);
+%copy_file(sas/macros/clear_package_definitions.sas,
+           Macros/clear_package_definitions.sas);
