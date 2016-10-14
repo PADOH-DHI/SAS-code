@@ -69,7 +69,7 @@ Libname Macros "Macros";
  /*----------------------------------------------------------------------------
     Create the project products in the WORK library
  ----------------------------------------------------------------------------*/
-PROC DELETE data = Work.Functions (alter = &data_password.) memtype = data;
+PROC DELETE data = Work.Functions (alter = &data_password.);
 Run;
 
 %Include "sas/functions/create_function_dataset.sas";
