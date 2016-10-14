@@ -18,13 +18,19 @@ Output
 
 Options cmplib = Work.Functions;
 
-PROC DELETE library = Work data = Functions (alter = DHI);
-Run;
 
-%Include "&project_dir./sas/functions/utility.sas";
-%Include "&project_dir./sas/functions/array.sas";
-%Include "&project_dir./sas/functions/date.sas";
+%MACRO delete_functions_if_exists;
+    %If %sysfunc(exist(work.functions)) %then %do;
+        PROC DELETE library = Work data = Functions (alter = DHI);
+        Run;
+    %End;
+%Mend delete_functions_if_exists;
 
-%Include "&project_dir./tests/test_functions_utility.sas";
-%Include "&project_dir./tests/test_functions_array.sas";
-%Include "&project_dir./tests/test_functions_date.sas";
+
+%Include "sas/functions/utility.sas";
+%Include "sas/functions/array.sas";
+%Include "sas/functions/date.sas";
+
+%Include "tests/test_functions_utility.sas";
+%Include "tests/test_functions_array.sas";
+%Include "tests/test_functions_date.sas";
