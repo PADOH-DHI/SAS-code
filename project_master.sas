@@ -11,10 +11,6 @@ Input
         "production" run, this should be a shared directory.
  ----------------------------------------------------------------------------*/
 
- /* Have SAS abort if any error occurs */
-Options errabend;
-
-
  /*----------------------------------------------------------------------------
 If this program is run using a GUI, change the system working directory to the
 project path.
