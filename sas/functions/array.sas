@@ -169,7 +169,7 @@ PROC FCMP outlib = Work.Functions.Utility;
     */
     Function reducec(function $, carray[*] $) $ 2048;
         Length result $ 2048;
-        If dim(carray) = 0 then return(.);
+        If dim(carray) = 0 then return('');
         If dim(carray) = 1 then return(carray[1]);
         result = carray[1];
         Do i = 2 to dim(carray);
