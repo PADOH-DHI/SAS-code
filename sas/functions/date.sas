@@ -12,11 +12,11 @@ Input
 
 Output
     Work.Functions.Date
-		Package of compiled custom SAS date routines.
+        Package of compiled custom SAS date routines.
 
 Additonal notes
-	The compiled function data set will ultimately be copied to a directory
-	where all DHI staff have access.
+    The compiled function data set will ultimately be copied to a directory
+    where all DHI staff have access.
  ----------------------------------------------------------------------------*/
 
  /* Extremes of SAS date values */
@@ -105,12 +105,6 @@ PROC FCMP inlib = Work.Functions outlib = Work.Functions.Date;
         Else if lower = upper then
             return(lower);
         Array valid_date [1] / nosymbols;
-        /* Print a message once for this problem */
-        Static printed_message 0;
-        If upper < lower & not printed_message then do;
-            Put "Upper bound of possible dates is less than lower bound";
-            printed_message = 1;
-        End;
         Call dynamic_array(valid_date, upper - lower + 1);
         valid_count = 0;
         Do date_value = lower to upper;
