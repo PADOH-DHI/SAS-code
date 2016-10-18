@@ -121,4 +121,116 @@ PROC FCMP inlib = Work.Functions outlib = Work.Functions.Date;
             return(valid_date[valid_index]);
         End;
     Endsub;
+
+    /*-------------------------------------------------------------------------
+    Impute an ordered sequence of dates from partial data.
+
+    Arguments
+        date_var
+            (numeric array) Variables to be assigned the imputed dates
+        date_month
+            (numeric array) Month values for the dates, where date_month[i] is
+            for the ith date.
+        date_day
+            (numeric array) Day of the month values for the dates, where
+            date_day[i] is for the ith date.
+        date_year
+            (numeric array) Year values for the dates, where date_year[i] is
+            for the ith date.
+
+    Return
+        The variables in date_var will be assigned date values such that, for
+        i < j, if date_var[j] is not missing, then date_var[i] <= date_var[j].
+
+    Details
+        This CALL routine takes date data broken into parts: month, day, and
+        year. Unknown parts are set to missing, and a sequence of dates is
+        given through arrays of these parts.
+
+        Imputation is done by using the known date parts and the sequence order
+        to determine the set of possible values for each date. Each date is
+        assigned a random value from this range, and then all the dates are
+        sorted so that the sequence order is maintained.
+
+        If a date is first or last in the sequence and has an unknown year,
+        then it will be set to missing.
+
+        WARNING: The correct ordering of dates cannot be guaranteed when one is
+        missing the year but not the month or day. This routine will always
+        work if each date's range of possible values is not disconnected.
+    */
+    Subroutine impute_date_sequence(date_var[*], date_month[*], date_day[*],
+                                    date_year[*]);
+        Outargs date_var;
+        /*                ______date_var[1]_______date_var[2] ...
+        date_bound: low  | date_bound[1, 1], date_bound[1, 2], ...
+                    high | date_bound[2, 1], date_bound[2, 2], ... */
+        Array date_bound [2, 1] / nosymbols;
+        Call dynamic_array(date_bound, 2, dim(date_var));
+        Array set_missing [1] / nosymbols;
+        Call dynamic_array(set_missing, dim(date_var));
+        Do a = 1 to dim(set_missing);
+            set_missing[a] = 0;
+        End;
+        /* Use given date parts to determine each date's possible range */
+        bound2 = dim2(date_bound);
+        Do i = 1 to bound2;
+            If missing(date_year[i]) then do;
+                date_bound[1, i] = .;
+                date_bound[2, i] = &max_sas_date.;
+                If i = 1 | i = bound2 then set_missing[i] = 1;
+            End;
+            Else if missing(date_month[i]) & missing(date_day[i]) then do;
+                date_bound[1, i] = mdy(1, 1, date_year[i]);
+                date_bound[2, i] = mdy(12, 31, date_year[i]);
+            End;
+            Else if missing(date_day[i]) then do;
+                date_bound[1, i] = mdy(date_month[i], 1, date_year[i]);
+                next_month = intnx('month', date_bound[1, i], 1);
+                date_bound[2, i] = next_month - 1;
+            End;
+            Else if missing(date_month) then do;
+                date_bound[1, i] = mdy(1, date_day[i], date_year[i]);
+                date_bound[2, i] = mdy(12, date_day[i], date_year[i]);
+            End;
+            Else do;
+                date_bound[1, i] = mdy(date_month[i], date_day[i], date_year[i]);
+                date_bound[2, i] = date_bound[1, i];
+            End;
+        End;
+        /* Each date's boundaries are constrained by the boundaries of
+           neighboring dates:
+           - Each lower bound is greater than or equal to the previous
+           - Each upper bound is less than or equal to the subsequent */
+        If bound2 > 1 then do;
+            Do j = 2 to bound2;
+                If missing(date_bound[1, j]) |
+                        date_bound[1, j] < date_bound[1, j - 1] then
+                    date_bound[1, j] = date_bound[1, j - 1];
+            End;
+            Do k = (bound2 - 1) to 1 by -1;
+                If missing(date_bound[2, k]) |
+                        date_bound[2, k] > date_bound[2, k + 1] then
+                    date_bound[2, k] = date_bound[2, k + 1];
+            End;
+        End;
+        /* If any of the constrained ranges are empty, that means the dates
+           were not in the specified order. Set them all to missing. */
+        is_ordered = 1;
+        Do a = 1 to dim2(date_bound) while(is_ordered);
+            If date_bound[1, a] > date_bound[2, a] then is_ordered = 0;
+        End;
+        If is_ordered then do m = 1 to dim(date_var);
+            date_var[m] = pick_bounded_date(date_bound[1, m], date_bound[2, m],
+                                            date_month[m], date_day[m],
+                                            date_year[m]);
+        End;
+        Else do m = 1 to dim(date_var);
+            date_var[m] = .;
+        End;
+        Call sortn_dynamic(date_var);
+        Do n = 1 to dim(date_var);
+            If set_missing[n] then date_var[n] = .;
+        End;
+    Endsub;
 Run;

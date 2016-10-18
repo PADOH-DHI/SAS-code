@@ -64,6 +64,47 @@ PROC FCMP outlib = Work.Functions.Utility;
     Endsub;
 
     /*------------------------------------------------------------------------
+    Sorts the values of any array. Behaves similarly to the SORTN function,
+    but also works with dynamic arrays.
+
+    Arguments
+        narray
+            (numeric array) Array to be sorted
+
+    Return
+        The values of the narray will be rearranged in ascending order.
+
+    Details
+        Sort order is determined by the hashed values of narray.
+    */
+    Subroutine sortn_dynamic(narray[*]);
+        Outargs narray;
+        Length value count 8;
+        Declare hash value_hash(ordered: 'a');
+        rc = value_hash.defineKey('value');
+        rc = value_hash.defineData('value', 'count');
+        rc = value_hash.defineDone();
+        Do i = 1 to dim(narray);
+            value = narray[i];
+            rc = value_hash.find();
+            If rc then count = 1;
+            Else count = count + 1;
+            rc = value_hash.replace();
+        End;
+        Declare hiter value_hiter('value_hash');
+        index = 1;
+        Do while(index <= dim(narray));
+            rc = value_hiter.next();
+            Do k = 1 to count;
+                narray[index] = value;
+                index = index + 1;
+            End;
+        End;
+        /* Hash persists between calls, so clear when done */
+        rc = value_hash.clear();
+    Endsub;
+
+    /*------------------------------------------------------------------------
     Collapse a numeric array to a single value by cumulatively applying a
     binary function to its values, from left to right.
 
