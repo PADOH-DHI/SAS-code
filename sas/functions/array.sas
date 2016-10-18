@@ -101,6 +101,7 @@ PROC FCMP outlib = Work.Functions.Utility;
             End;
         End;
         /* Hash persists between calls, so clear when done */
+        rc = value_hiter.delete();
         rc = value_hash.clear();
     Endsub;
 
