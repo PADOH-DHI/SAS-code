@@ -42,37 +42,47 @@ DATA test_impute_date_sequence;
         @28 year4 4.
         @32 month4 2.
         @34 day4 2.;
-    Array sas_date [*] date1-date4;
-    Array given_month [*] month1-month4;
-    Array given_day [*] day1-day4;
-    Array given_year [*] year1-year4;
-    Call impute_date_sequence(sas_date, given_month, given_day, given_year);
+    Array sas_date [4] date1-date4;
+    Array month_given [4] month1-month4;
+    Array day_given [4] day1-day4;
+    Array year_given [4] year1-year4;
+    Array month_temp [4] _temporary_;
+    Array day_temp [4] _temporary_;
+    Array year_temp [4] _temporary_;
+
     Do i = 1 to dim(sas_date);
+        month_temp[i] = month_given[i];
+        day_temp[i] = day_given[i];
+        year_temp[i] = year_given[i];
+    End;
+
+    Call impute_date_sequence(sas_date, month_temp, day_temp, year_temp);
+    Do j = 1 to dim(sas_date);
         /* A date's missing if and only if it's an end date with unknown year */
-        If i = 1 | i = dim(sas_date) then do;
-            If not missing(given_year[i]) &
-                    missing(sas_date[i]) then
+        If j = 1 | j = dim(sas_date) then do;
+            If not missing(year_temp[j]) &
+                    missing(sas_date[j]) then
                 abort;
-            If missing(given_year[i]) &
-                    not missing(sas_date[i]) then
+            If missing(year_temp[j]) &
+                    not missing(sas_date[j]) then
                 abort;
         End;
         /* Check order */
-        If i > 1 then do;
-            If not missing(sas_date[i]) &
-                    sas_date[i] < sas_date[i - 1] then
+        If j > 1 then do;
+            If not missing(sas_date[j]) &
+                    sas_date[j] < sas_date[j - 1] then
                 abort;
         End;
         /* Known date parts should match */
-        If not missing(sas_date[i]) then do;
-            If not missing(given_month[i]) &
-                    month(sas_date[i]) ^= given_month[i] then
+        If not missing(sas_date[j]) then do;
+            If not missing(month_temp[j]) &
+                    month(sas_date[j]) ^= month_temp[j] then
                 abort;
-            If not missing(given_day[i]) &
-                    day(sas_date[i]) ^= given_day[i] then
+            If not missing(day_temp[j]) &
+                    day(sas_date[j]) ^= day_temp[j] then
                 abort;
-            If not missing(given_year[i]) &
-                    year(sas_date[i]) ^= given_year[i] then
+            If not missing(year_temp[j]) &
+                    year(sas_date[j]) ^= year_temp[j] then
                 abort;
         End;
     End;

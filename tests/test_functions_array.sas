@@ -12,7 +12,11 @@ DATA test_identicalc;
         @8 array_value_04 2.
         @10 array_value_05 2.;    
     Array input_array [5] array_value_01-array_value_05;
-    result = identicaln(input_array);
+    Array input_temp [5] _temporary_;
+    Do i = 1 to dim(input_array);
+        input_temp[i] = input_array[i];
+    End;
+    result = identicaln(input_temp);
     If result ^= expected then abort;
     Datalines;
 1 3 3 3 3 3
@@ -30,9 +34,13 @@ DATA test_identicalc;
         @3 array_value_02 $Char1.
         @4 array_value_03 $Char1.
         @5 array_value_04 $Char1.
-        @6 array_value_05 $Char1.;    
+        @6 array_value_05 $Char1.;
     Array input_array [5] $ array_value_01-array_value_05;
-    result = identicalc(input_array);
+    Array input_temp [5] $ 1 _temporary_;
+    Do i = 1 to dim(input_array);
+        input_temp[i] = input_array[i];
+    End;
+    result = identicalc(input_temp);
     If result ^= expected then abort;
     Datalines;
 1AAAAA
@@ -42,15 +50,20 @@ DATA test_identicalc;
 ;
 Run;
 
+
 DATA test_sortn_dynamic;
     Length x1-x4 expected1-expected4 8;
     Informat x1-x4 6.;
     Input x1-x4 expected1-expected4;
     Array xvalues [4] x1-x4;
+    Array xtemp [4] _temporary_;
     Array expected [4] expected1-expected4;
-    Call sortn_dynamic(xvalues);
     Do i = 1 to dim(xvalues);
-        If xvalues[i] ^= expected[i] then abort;
+        xtemp[i] = xvalues[i];
+    End;
+    Call sortn_dynamic(xtemp);
+    Do j = 1 to dim(xtemp);
+        If xtemp[j] ^= expected[j] then abort;
     End;
     Drop i;
     Datalines;
@@ -101,14 +114,14 @@ DATA test_reducen;
         @13 funcname $Char32.
         @46 expected 4.;
 
-    Array xarray [4] _temporary_;
+    Array xarray [4] x1-x4;
+    Array xtemp[4] _temporary_;
+    Do i = 1 to dim(xarray);
+        xtemp[i] = xarray[i];
+    End;
     Array singleton [1] _temporary_;
-    Array duo [2] _temporary_;
-    xarray[1] = x1;
-    xarray[2] = x2;
-    xarray[3] = x3;
-    xarray[4] = x4;
     singleton[1] = x1;
+    Array duo [2] _temporary_;
     duo[1] = x1;
     duo[2] = x2;
 
